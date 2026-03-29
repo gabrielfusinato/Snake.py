@@ -31,11 +31,11 @@ def define_snake_initial_position(board_game):
 
     return snake_line, snake_column
 
-def define_apple_initial_position(board_game):
+def define_new_apple_position(board_game):
     while True:
         apple_line = randint(0, len(board_game) - 1)
         apple_column = randint(0, len(board_game[apple_line]) - 1)
-        if board_game[apple_line][apple_column] != SquareValue.SNAKE:
+        if not is_a_snake(board_game, apple_line, apple_column):
             board_game[apple_line][apple_column] = SquareValue.APPLE
             break
 
@@ -68,17 +68,23 @@ def compute_next_snake_movement(snake_line, snake_column, move_direction):
 def hit_the_wall(board_game, snake_line, snake_column):
     return snake_line < 0 or snake_line > len(board_game) - 1 or snake_column < 0 or snake_column > len(board_game[snake_line]) - 1
 
-def won_the_game(board_game, snake_line, snake_column):
+def won_the_game(board_game, snake_positions):
+    return len(snake_positions) == len(board_game) * len(board_game[0])
+
+def is_a_snake(board_game, snake_line, snake_column):
+    return board_game[snake_line][snake_column] == SquareValue.SNAKE
+
+def is_an_apple(board_game, snake_line, snake_column):
     return board_game[snake_line][snake_column] == SquareValue.APPLE
 
 def run():
     
     board_game = create_board_game()
-    
-    snake_line, snake_column = define_snake_initial_position(board_game)
 
-    define_apple_initial_position(board_game)
-    
+    snake_line, snake_column = define_snake_initial_position(board_game)
+    snake_positions = [[snake_line, snake_column]]
+
+    define_new_apple_position(board_game)
     while True:
         display_game(board_game)
 
@@ -89,13 +95,25 @@ def run():
         if hit_the_wall(board_game, next_snake_line, next_snake_column):
             print("You lost! You hit the wall :(")
             return
-    
-        if won_the_game(board_game, next_snake_line, next_snake_column):
-            print("You won the game!")
+
+        if is_a_snake(board_game, next_snake_line, next_snake_column):
+            print("You lost! You hit itself :(")
             return
+    
+        did_snake_ate_an_apple = is_an_apple(board_game, next_snake_line, next_snake_column)
 
         board_game[next_snake_line][next_snake_column] = SquareValue.SNAKE
-        board_game[snake_line][snake_column] = SquareValue.EMPTY
+        snake_positions.append([next_snake_line, next_snake_column])
+
+        if won_the_game(board_game, snake_positions):
+            print("You won the game!")
+            break
+
+        if did_snake_ate_an_apple:
+            define_new_apple_position(board_game)
+        else:
+            snake_tail_line, snake_tail_column = snake_positions.pop(0)
+            board_game[snake_tail_line][snake_tail_column] = SquareValue.EMPTY
 
         snake_line = next_snake_line
         snake_column = next_snake_column
