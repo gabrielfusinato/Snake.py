@@ -7,9 +7,9 @@ from enum import Enum
 BOARD_GAME_SIZE = 8
 
 class SquareValue(Enum):
-    SNAKE = ">"
-    APPLE = "o"
-    EMPTY = "-"
+    SNAKE = "🟢"
+    APPLE = "🍎"
+    EMPTY = "⬜"
 
 class MoveDirection(Enum):
     LEFT = "L"
