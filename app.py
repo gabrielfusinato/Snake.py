@@ -1,3 +1,6 @@
+import threading
+import readchar
+import time
 from random import randint
 from enum import Enum
 
@@ -39,10 +42,17 @@ def define_new_apple_position(board_game):
             board_game[apple_line][apple_column] = SquareValue.APPLE
             break
 
-def user_input():
-    user_move = str(input(f"Direction ({MoveDirection.LEFT.value} = Left, {MoveDirection.RIGHT.value} = Right, {MoveDirection.UP.value} = Up, {MoveDirection.DOWN.value} = Down): ")).strip().upper()[0]
-    
-    return MoveDirection(user_move)
+def listen_to_user_keyboard(game_state):
+    while True:
+        key = readchar.readkey()
+        if key == readchar.key.UP:
+            game_state["move_direction"] = MoveDirection.UP
+        elif key == readchar.key.DOWN:
+            game_state["move_direction"] = MoveDirection.DOWN
+        elif key == readchar.key.LEFT:
+            game_state["move_direction"] = MoveDirection.LEFT
+        elif key == readchar.key.RIGHT:
+            game_state["move_direction"] = MoveDirection.RIGHT
     
 def display_game(board_game):
     for linha in range (len(board_game)):
@@ -78,19 +88,29 @@ def is_an_apple(board_game, snake_line, snake_column):
     return board_game[snake_line][snake_column] == SquareValue.APPLE
 
 def run():
-    
     board_game = create_board_game()
+    game_state = {"move_direction": None}
+
+    threading.Thread(target=listen_to_user_keyboard, args=(game_state,), daemon=True).start()
 
     snake_line, snake_column = define_snake_initial_position(board_game)
     snake_positions = [[snake_line, snake_column]]
 
     define_new_apple_position(board_game)
+
+    print("Welcome to PySnake!") 
+    display_game(board_game)
+
+    while game_state["move_direction"] == None:
+        time.sleep(1)
+
     while True:
+        print()
         display_game(board_game)
 
-        next_move_direction = user_input()
-
-        next_snake_line, next_snake_column = compute_next_snake_movement(snake_line, snake_column, next_move_direction)
+        time.sleep(0.4)
+        
+        next_snake_line, next_snake_column = compute_next_snake_movement(snake_line, snake_column, game_state["move_direction"])
 
         if hit_the_wall(board_game, next_snake_line, next_snake_column):
             print("You lost! You hit the wall :(")
